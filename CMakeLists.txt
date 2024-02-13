@@ -60,13 +60,16 @@ set(INCLUDE_PATH
 file(GLOB_RECURSE SRC_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 
 # 添加一个可执行目标到项目中，并指定构建这个目标需要的源文件。
-add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/test/plot_test.cpp ${SRC_FILES})
-
+add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/test/mian.cpp ${SRC_FILES})
+add_executable(test ${CMAKE_SOURCE_DIR}/test/plot_test.cpp ${SRC_FILES})
 # 为可执行目标设置私有包含目录，这意味着这些目录只对这个目标可见。
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_PATH})
+target_include_directories(test PRIVATE ${INCLUDE_PATH})
 
 # 链接Python库和NumPy库到可执行目标，确保目标可以使用这些外部库的功能。
 target_link_libraries(${PROJECT_NAME} PRIVATE Python3::Python Python3::NumPy)
+target_link_libraries(test PRIVATE Python3::Python Python3::NumPy)
+
 
 # 添加一个名为planner的静态库目标到项目中，指定构建这个库需要的源文件。
 add_library(planner STATIC ${SRC_FILES})

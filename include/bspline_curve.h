@@ -1,5 +1,5 @@
 #pragma once
-#include "curve.h"
+#include "common.h"
 namespace ahrs {
 class BsplineCurve {
  private:
