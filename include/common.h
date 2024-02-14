@@ -1,6 +1,6 @@
 #pragma once
+#include <limits>
 #include <vector>
-
 namespace ahrs {
 
 struct Point {
@@ -38,6 +38,9 @@ class Curve {
 };
 
 struct RobotState {
+  RobotState() : x_(0.0), y_(0.0), theta_(0.0), v_(0.0), w_(0.0), kappa_(0.0) {}
+  RobotState(const double& x, const double& y, const double& theta)
+      : x_(x), y_(y), theta_(theta), v_(0.0), w_(0.0), kappa_(0.0) {}
   double x_;
   double y_;
   double theta_;

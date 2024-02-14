@@ -2,6 +2,6 @@
 namespace ahrs {
 class Environment {
  public:
-  void Update();
+  void Update(const RobotState& state) {}
 };
 }  // namespace ahrs
