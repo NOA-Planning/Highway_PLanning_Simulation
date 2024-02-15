@@ -13,8 +13,8 @@ void UpdateRobotState(RobotState& state, const Curve& trajectory) {
   if (trajectory.Points().empty()) {
     return;
   }
-  state.x_ = trajectory.Points().at(1).x_;
-  state.y_ = trajectory.Points().at(1).y_;
+  // tips:潜在的越界
+  state.pose_ = trajectory.Points().at(1).pose_;
   state.theta_ = trajectory.Points().at(1).theta_;
 }
 ReferenceLine LoadRoadInfo(const std::string& file) {
@@ -51,11 +51,13 @@ ReferenceLine LoadRoadInfo(const std::string& file) {
 
   double s = 0;
   for (size_t i = 0; i + 1 < points.size(); ++i) {
-    double theta = math::NormalizeAngle(std::atan2(
-        points[i + 1].y_ - points[i].y_, points[i + 1].x_ - points[i].x_));
+    double theta = math::NormalizeAngle(
+        std::atan2(points[i + 1].pose_.y() - points[i].pose_.y(),
+                   points[i + 1].pose_.x() - points[i].pose_.x()));
     points[i].theta_ = theta;
-    double ds = std::sqrt(std::pow(points[i + 1].y_ - points[i].y_, 2) +
-                          std::pow(points[i + 1].x_ - points[i].x_, 2));
+    double ds =
+        std::sqrt(std::pow(points[i + 1].pose_.y() - points[i].pose_.y(), 2) +
+                  std::pow(points[i + 1].pose_.x() - points[i].pose_.x(), 2));
     s += ds;
     points[i + 1].s_ = s;
   }
@@ -73,19 +75,21 @@ int main() {
   if (reference_line.GetPoints().empty()) {
     return 0;
   }
+
+  //车体参数等配置
+  Config config;
   //感知模块，负责查询障碍物信息
-  Environment environment;
+  Environment environment(reference_line, config);
   //轨迹规划器
   BsplineLatticePlanner planner;
   //机器人状态
   Point start = reference_line.GetPoints().front();
-  RobotState robot_state(start.x_, start.y_, start.theta_);
+  RobotState robot_state(start.pose_.x(), start.pose_.y(), start.theta_);
   //规划结果
   Curve trajectory;
   //可视化模块
   Visualization visualization;
-  //车体参数等配置
-  Config config;
+
   DebugInfo debug_info;
 
   while (true) {

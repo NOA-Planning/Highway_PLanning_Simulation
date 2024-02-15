@@ -1,17 +1,19 @@
 #pragma once
 #include <limits>
 #include <vector>
-namespace ahrs {
 
+#include "math/vec2d.h"
+namespace ahrs {
+using namespace math;
 struct Point {
  private:
   /* data */
  public:
   Point(){};
-  Point(const double& x, const double& y) : x_(x), y_(y) {}
+  Point(const double& x, const double& y) : pose_(x, y) {}
+  // tips： 这里pose_类的直接初始化方式
   ~Point() {}
-  double x_;
-  double y_;
+  Vec2d pose_;
   double theta_;
   double kappa_;
   double dkappa_;
@@ -38,11 +40,10 @@ class Curve {
 };
 
 struct RobotState {
-  RobotState() : x_(0.0), y_(0.0), theta_(0.0), v_(0.0), w_(0.0), kappa_(0.0) {}
+  RobotState() : pose_(0.0, 0.0), theta_(0.0), v_(0.0), w_(0.0), kappa_(0.0) {}
   RobotState(const double& x, const double& y, const double& theta)
-      : x_(x), y_(y), theta_(theta), v_(0.0), w_(0.0), kappa_(0.0) {}
-  double x_;
-  double y_;
+      : pose_(x, y), theta_(theta), v_(0.0), w_(0.0), kappa_(0.0) {}
+  Vec2d pose_;
   double theta_;
   double v_;
   double w_;

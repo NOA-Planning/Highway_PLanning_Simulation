@@ -27,8 +27,8 @@ class ReferenceLine {
     size_t index = points_.size() - 1;
     double dis = 0;
     for (size_t i = 0; i < points_.size(); ++i) {
-      dis = (x - points_[i].x_) * (x - points_[i].x_) +
-            (y - points_[i].y_) * (y - points_[i].y_);
+      dis = (x - points_[i].pose_.x()) * (x - points_[i].pose_.x()) +
+            (y - points_[i].pose_.y()) * (y - points_[i].pose_.y());
       if (dis < max_dis) {
         max_dis = dis;
         index = i;

@@ -2,9 +2,11 @@
 namespace ahrs {
 class Config {
  public:
-  double length_ = 20.0;
-  double tail_ = 0.5;
-  double front_ = 2;
+  Config(){};
+  double length_ = 40.0;
+  double tail_ = 1;
+  double front_ = 3;
   double width_ = 2;
+  double interval_ = 0.1;  // 10hz
 };
 }  // namespace ahrs
