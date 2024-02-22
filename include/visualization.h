@@ -25,6 +25,11 @@ class Visualization {
                    const std::string& color, const bool& fill = true);
   void DrawPolygon(const Polygon2d& polygon, const std::string& color,
                    const bool& fill = true);
+  void ShowPoints(const std::vector<Vec2d>& points, const std::string& name,
+                  const std::string& color, const Config& config);
+  void ShowPoints(const std::vector<std::vector<Vec2d>>& points,
+                  const std::string& name, const std::string& color,
+                  const Config& config);
   void ShowPoints(const std::vector<Point>& points, const std::string& name,
                   const std::string& color, const Config& config,
                   const bool& show_car = false);
@@ -32,5 +37,6 @@ class Visualization {
                   const RobotState& state, const Curve& trajectory,
                   const Config& config, const DebugInfo& debug_info);
   void ShowObstacle(const Environment& env);
+  void ShowDebugInfo(const DebugInfo& debug_info, const Config& config);
 };
 }  // namespace ahrs

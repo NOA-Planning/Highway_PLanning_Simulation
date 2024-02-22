@@ -1,6 +1,10 @@
 #pragma once
-
+#include "common.h"
 namespace ahrs {
-class DebugInfo {};
+struct DebugInfo {
+  std::vector<std::vector<Vec2d>> sample_control_points_;
+  std::vector<Point> reference_line_points_;
+  std::vector<std::vector<Vec2d>> ctp_sequence_;
+};
 
 }  // namespace ahrs

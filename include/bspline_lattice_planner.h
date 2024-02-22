@@ -11,7 +11,19 @@ namespace ahrs {
 class BsplineLatticePlanner {
  public:
   bool Plan(const RobotState& state, const ReferenceLine& reference_line,
-            Environment& env, Curve& trajectory, const Config& config,
-            DebugInfo& debug_info);
+            Environment& env, Curve& trajectory, const Config& config);
+  DebugInfo GetDebugInfo() const { return debug_info_; }
+
+ private:
+  void SampleControlPoints(
+      const RobotState& state, const ReferenceLine& reference_line,
+      Environment& env, std::vector<std::vector<Vec2d>>& control_point_samples);
+
+  std::vector<std::vector<Vec2d>> GenerateCtpSequence(
+      const std::vector<std::vector<Vec2d>>& control_point_samples,
+      const RobotState& state, const Environment& env);
+
+  DebugInfo debug_info_;
+  Config config_;
 };
 }  // namespace ahrs

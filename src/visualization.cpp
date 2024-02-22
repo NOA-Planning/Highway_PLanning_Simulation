@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "debug_info.h"
 #include "matplotlibcpp.h"
 #include "visualization.h"
 namespace plt = matplotlibcpp;
@@ -19,6 +20,34 @@ void Visualization::ShowObstacle(const Environment& env) {
   for (const auto& obs : env.DynamicObstacle()) {
     DrawPolygon(obs.GetPolygon(), "pink");
   }
+}
+
+void Visualization::ShowPoints(const std::vector<Vec2d>& points,
+                               const std::string& name,
+                               const std::string& color, const Config& config) {
+  std::vector<double> x_list, y_list;
+  for (size_t i = 0; i < points.size(); ++i) {
+    double cur_x = points[i].x();
+    double cur_y = points[i].y();
+    x_list.push_back(cur_x);
+    y_list.push_back(cur_y);
+  }
+  plt::named_plot(name, x_list, y_list, color);
+}
+
+void Visualization::ShowPoints(const std::vector<std::vector<Vec2d>>& points,
+                               const std::string& name,
+                               const std::string& color, const Config& config) {
+  std::vector<double> x_list, y_list;
+  for (size_t i = 0; i < points.size(); ++i) {
+    for (size_t j = 0; j < points[i].size(); ++j) {
+      double cur_x = points[i][j].x();
+      double cur_y = points[i][j].y();
+      x_list.push_back(cur_x);
+      y_list.push_back(cur_y);
+    }
+  }
+  plt::named_plot(name, x_list, y_list, color);
 }
 
 void Visualization::ShowPoints(const std::vector<Point>& points,
@@ -175,8 +204,10 @@ void Visualization::ShowResult(const ReferenceLine& line,
   DrawCar(state, config, "grey");
 
   plt::axis("equal");
-  plt::xlim(state.pose_.x() - config.length_, state.pose_.x() + config.length_);
-  plt::ylim(state.pose_.y() - config.length_, state.pose_.y() + config.length_);
+  plt::xlim(state.pose_.x() - config.sample_length_,
+            state.pose_.x() + config.sample_length_);
+  plt::ylim(state.pose_.y() - config.sample_length_,
+            state.pose_.y() + config.sample_length_);
   plt::title("result");
   std::map<std::string, std::string> keywords_label;
   keywords_label.insert(
@@ -206,10 +237,27 @@ void Visualization::ShowResult(const ReferenceLine& line,
   // 修改为PyTuple_SetItem(args, 0, PyLong_FromDouble(nrows));
   ShowPoints(trajectory.Points(), "trajectory", "r-", config, true);
   DrawCar(state, config, "grey");
+  ShowDebugInfo(debug_info, config);
   plt::axis("equal");
   plt::title("trajectory");
 
   plt::pause(0.01);
   // plt::show();  // 显示图表
 }
+
+void Visualization::ShowDebugInfo(const DebugInfo& debug_info,
+                                  const Config& config) {
+  // 采样控制点显示
+  ShowPoints(debug_info.sample_control_points_, "sample_control_points", "g.",
+             config);
+  // 显示截取的参考线
+  ShowPoints(debug_info.reference_line_points_, "reference_line", "r.", config,
+             false);
+  //显示控制点所有组合
+  for (size_t i = 0; i < debug_info.ctp_sequence_.size(); ++i) {
+    std::string name = "ctp_seq[" + std::to_string(i) + "]";
+    ShowPoints(debug_info.ctp_sequence_[i], name, "b--", config);
+  }
+}
+
 }  // namespace ahrs

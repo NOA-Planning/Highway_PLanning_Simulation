@@ -90,8 +90,6 @@ int main() {
   //可视化模块
   Visualization visualization;
 
-  DebugInfo debug_info;
-
   while (true) {
     //更新参考线
     reference_line.Update(robot_state);
@@ -99,12 +97,12 @@ int main() {
     environment.Update(robot_state);
     //规划器求解轨迹
     bool res = planner.Plan(robot_state, reference_line, environment,
-                            trajectory, config, debug_info);
+                            trajectory, config);
     //更新机器人的位置（假设机器人能够完美跟踪规划出来的轨迹）
     UpdateRobotState(robot_state, trajectory);
     //可视化当前帧计算结果
     visualization.ShowResult(reference_line, environment, robot_state,
-                             trajectory, config, debug_info);
+                             trajectory, config, planner.GetDebugInfo());
   }
 
   return 0;

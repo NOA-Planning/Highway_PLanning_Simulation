@@ -17,7 +17,7 @@ struct Point {
   double theta_;
   double kappa_;
   double dkappa_;
-  double s_;
+  double s_ = 0.0;
   double left_boundary_x_;
   double left_boundary_y_;
   double right_boundary_x_;
