@@ -56,4 +56,13 @@ struct Index {
   int j_;
 };
 
+struct Node2d {
+  Node2d() : index_(0, 0), pos_(0.0, 0.0) {}
+  Node2d(int i, int j, const double& x, const double& y)
+      : index_(i, j), pos_(x, y) {}
+
+  Index index_;
+  Vec2d pos_;
+};
+
 }  // namespace ahrs

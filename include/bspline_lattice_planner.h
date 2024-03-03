@@ -5,7 +5,9 @@
 #include "localization.h"
 #include "math/math_common.h"
 #include "reference_line.h"
+#include "trajectory_scorer.h"
 #include "visualization.h"
+
 namespace ahrs {
 
 class BsplineLatticePlanner {
@@ -19,13 +21,16 @@ class BsplineLatticePlanner {
       const RobotState& state, const ReferenceLine& reference_line,
       Environment& env, std::vector<std::vector<Vec2d>>& control_point_samples);
 
-  std::vector<std::vector<Vec2d>> GenerateCtpSequenceByDp(
+  std::vector<std::vector<Node2d>> GenerateCtpSequenceByDp(
       const std::vector<std::vector<Vec2d>>& control_point_samples,
       const RobotState& state, const Environment& env);
-  std::vector<std::vector<Vec2d>> GenerateCtpSequenceByDfs(
+  std::vector<std::vector<Node2d>> GenerateCtpSequenceByDfs(
       const std::vector<std::vector<Vec2d>>& control_point_samples,
       const RobotState& state, const Environment& env);
-
+  std::vector<CostPath> SamplesScore(
+      const std::vector<std::vector<Node2d>>& ctp_seq, const Environment& env,
+      const Config& config);
+  Curve ChoseBestTrajectory(const std::vector<CostPath>& cost_path);
   DebugInfo debug_info_;
   Config config_;
 };

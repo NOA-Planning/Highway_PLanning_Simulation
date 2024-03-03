@@ -38,16 +38,21 @@ void Visualization::ShowPoints(const std::vector<Vec2d>& points,
 void Visualization::ShowPoints(const std::vector<std::vector<Vec2d>>& points,
                                const std::string& name,
                                const std::string& color, const Config& config) {
-  std::vector<double> x_list, y_list;
   for (size_t i = 0; i < points.size(); ++i) {
-    for (size_t j = 0; j < points[i].size(); ++j) {
-      double cur_x = points[i][j].x();
-      double cur_y = points[i][j].y();
-      x_list.push_back(cur_x);
-      y_list.push_back(cur_y);
-    }
+    ShowPoints(points[i], name, color, config);
   }
-  plt::named_plot(name, x_list, y_list, color);
+}
+
+void Visualization::ShowPoints(const std::vector<Node2d>& points,
+                               const std::string& name,
+                               const std::string& color, const Config& config) {
+  for (size_t i = 0; i < points.size(); ++i) {
+    std::vector<Vec2d> temp;
+    for (const auto& p : points) {
+      temp.push_back(p.pos_);
+    }
+    ShowPoints(temp, name, color, config);
+  }
 }
 
 void Visualization::ShowPoints(const std::vector<Point>& points,

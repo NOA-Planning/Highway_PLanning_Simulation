@@ -1,4 +1,7 @@
 
+#include <stack>    // 对于 std::stack
+#include <utility>  // 对于 std::pair 和 std::make_pair
+
 #include "config.h"
 #include "environment.h"
 #include "grid_graph.h"
@@ -24,21 +27,21 @@ GridGraph::GridGraph(const std::vector<std::vector<Vec2d>>& sample_points,
     }
   }
 }
-std::vector<std::vector<Vec2d>> GridGraph::GraphSearch() {
-  std::vector<std::vector<Vec2d>> all_paths;
-  std::vector<Vec2d> path;
+std::vector<std::vector<Node2d>> GridGraph::GraphSearch() {
+  std::vector<std::vector<Node2d>> all_paths;
+  std::vector<Node2d> path;
   Dfs(&graph_[0][0], layer_num_ - 1, path, all_paths);
   return all_paths;
 }
 
-void GridGraph::Dfs(GridNode* current, int end_x, std::vector<Vec2d>& path,
-                    std::vector<std::vector<Vec2d>>& all_paths) {
+void GridGraph::Dfs(GridNode* current, int end_x, std::vector<Node2d>& path,
+                    std::vector<std::vector<Node2d>>& all_paths) {
   if (!current || current->visited_ == true) {
     return;
   }
   current->visited_ = true;
-  path.push_back(current->pos_);
-  if (current->index_.i_ == end_x) {
+  path.push_back(current->node_);
+  if (current->node_.index_.i_ == end_x) {
     all_paths.push_back(path);
   } else {
     for (GridNode* neighbor : current->neighbors_) {
@@ -48,6 +51,38 @@ void GridGraph::Dfs(GridNode* current, int end_x, std::vector<Vec2d>& path,
 
   path.pop_back();
   current->visited_ = false;
+}
+
+std::vector<std::vector<Node2d>> GridGraph::GraphSearchWithStack() {
+  std::stack<std::pair<GridNode*, std::vector<Node2d>>> stk;
+  std::vector<Node2d> initial_path;
+  std::vector<std::vector<Node2d>> all_paths;
+
+  stk.push(std::make_pair(&graph_[0][0], initial_path));
+
+  while (!stk.empty()) {
+    auto [current, path] = stk.top();
+    stk.pop();
+
+    if (!current || current->visited_) continue;
+
+    current->visited_ = true;
+    path.push_back(current->node_);
+
+    if (current->node_.index_.i_ == layer_num_ - 1) {
+      all_paths.push_back(path);
+    } else {
+      for (GridNode* neighbor : current->neighbors_) {
+        if (!neighbor->visited_) {
+          stk.push(std::make_pair(neighbor, path));
+        }
+      }
+    }
+
+    current->visited_ =
+        false;  // Allow this node to be visited again in future paths.
+  }
+  return all_paths;
 }
 
 };  // namespace ahrs

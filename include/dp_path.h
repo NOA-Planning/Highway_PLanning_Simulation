@@ -7,13 +7,11 @@ namespace ahrs {
 struct Node {
   Node(const Vec2d& sample_point, const Index& index,
        const double& cost = std::numeric_limits<double>::max())
-      : pose_(sample_point),
-        index_(index),
+      : node_(index.i_, index.j_, sample_point.x(), sample_point.y()),
         parent_index({-1, -1}),
         cost_(cost),
         path_({}) {}
-  Vec2d pose_;
-  Index index_;
+  Node2d node_;
   Index parent_index;
   std::vector<Index> parent_indexes_;
   //   Node* pre_node_; //tips:这里用node*是不是更高效
@@ -25,7 +23,7 @@ class DpPath {
  public:
   DpPath(const std::vector<std::vector<Vec2d>>& sample_points,
          const Environment& env, const Config& config);
-  std::vector<Vec2d> DpSearch();
+  std::vector<Node2d> DpSearch();
 
  private:
   void Init(const std::vector<std::vector<Vec2d>>& sample_points);

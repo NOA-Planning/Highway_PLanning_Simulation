@@ -92,6 +92,7 @@ int main() {
 
   while (true) {
     //更新参考线
+    RobotState current_state = robot_state;
     reference_line.Update(robot_state);
     //更新障碍物信息
     environment.Update(robot_state);
@@ -101,7 +102,7 @@ int main() {
     //更新机器人的位置（假设机器人能够完美跟踪规划出来的轨迹）
     UpdateRobotState(robot_state, trajectory);
     //可视化当前帧计算结果
-    visualization.ShowResult(reference_line, environment, robot_state,
+    visualization.ShowResult(reference_line, environment, current_state,
                              trajectory, config, planner.GetDebugInfo());
   }
 

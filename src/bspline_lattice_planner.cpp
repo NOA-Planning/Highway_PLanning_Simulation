@@ -1,3 +1,7 @@
+#include <algorithm>
+#include <queue>
+#include <set>
+
 #include "bspline_lattice_planner.h"
 #include "dp_path.h"
 #include "grid_graph.h"
@@ -16,10 +20,12 @@ bool BsplineLatticePlanner::Plan(const RobotState& state,
   // std::vector<std::vector<Vec2d>> ctp_sequence =
   //     GenerateCtpSequenceByDp(control_point_samples, state, env);
 
-  std::vector<std::vector<Vec2d>> ctp_sequence =
+  std::vector<std::vector<Node2d>> ctp_sequence =
       GenerateCtpSequenceByDfs(control_point_samples, state, env);
 
-  trajectory = Curve(debug_info_.reference_line_points_);
+  std::vector<CostPath> sort_vec = SamplesScore(ctp_sequence, env, config);
+
+  trajectory = ChoseBestTrajectory(sort_vec);
 
   return true;
 }
@@ -42,7 +48,8 @@ void BsplineLatticePlanner::SampleControlPoints(
     //从左到右按照间隔采样
     std::vector<Vec2d> one_layer_sample;
     for (double dy = -config_.sample_half_width_;
-         dy < config_.sample_half_width_; dy += config_.ctp_interval_y_) {
+         dy < config_.sample_half_width_ + 0.001;
+         dy += config_.ctp_interval_y_) {
       double sample_x =
           center_point.pose_.x() + 0 * std::cos(theta) - dy * std::sin(theta);
       double sample_y =
@@ -60,7 +67,7 @@ void BsplineLatticePlanner::SampleControlPoints(
       reference_points.begin() + start_index,
       reference_points.begin() + end_index + 1);
 }
-std::vector<std::vector<Vec2d>> BsplineLatticePlanner::GenerateCtpSequenceByDp(
+std::vector<std::vector<Node2d>> BsplineLatticePlanner::GenerateCtpSequenceByDp(
     const std::vector<std::vector<Vec2d>>& control_point_samples,
     const RobotState& state, const Environment& env) {
   //规划起点
@@ -74,19 +81,21 @@ std::vector<std::vector<Vec2d>> BsplineLatticePlanner::GenerateCtpSequenceByDp(
 
   // tips: 这里可以用std::move
   // tips:vector的各种初始化构造讲一下
+
   std::vector<std::vector<Vec2d>> ctp_samples = {{zero_ctp}};
   // tips:insert如何插在Vetor前边，比插后边更耗时
   ctp_samples.insert(ctp_samples.end(), control_point_samples.begin(),
                      control_point_samples.end());
 
   DpPath dp_path(ctp_samples, env, config_);
-  std::vector<Vec2d> path = dp_path.DpSearch();
+  std::vector<Node2d> path = dp_path.DpSearch();
 
   debug_info_.ctp_sequence_ = {path};
 
   return {path};
 }
-std::vector<std::vector<Vec2d>> BsplineLatticePlanner::GenerateCtpSequenceByDfs(
+std::vector<std::vector<Node2d>>
+BsplineLatticePlanner::GenerateCtpSequenceByDfs(
     const std::vector<std::vector<Vec2d>>& control_point_samples,
     const RobotState& state, const Environment& env) {
   //规划起点
@@ -100,14 +109,58 @@ std::vector<std::vector<Vec2d>> BsplineLatticePlanner::GenerateCtpSequenceByDfs(
 
   // tips: 这里可以用std::move
   // tips:vector的各种初始化构造讲一下
-  std::vector<std::vector<Vec2d>> ctp_samples = {{zero_ctp}};
+  // std::vector<std::vector<Vec2d>> ctp_samples = {{start_ctp}, {zero_ctp}};
+  std::vector<std::vector<Vec2d>> ctp_samples;
+  ctp_samples.push_back({start_ctp});
+  ctp_samples.push_back({zero_ctp});
+
   // tips:insert如何插在Vetor前边，比插后边更耗时
   ctp_samples.insert(ctp_samples.end(), control_point_samples.begin(),
                      control_point_samples.end());
   GridGraph graph(ctp_samples, env, config_);
-  std::vector<std::vector<Vec2d>> all_ctp_sequence = graph.GraphSearch();
+  // std::vector<std::vector<Node2d>> all_ctp_sequence =
+  //     graph.GraphSearchWithStack();
+  std::vector<std::vector<Node2d>> all_ctp_sequence = graph.GraphSearch();
   debug_info_.ctp_sequence_ = all_ctp_sequence;
 
   return all_ctp_sequence;
+}
+std::vector<CostPath> BsplineLatticePlanner::SamplesScore(
+    const std::vector<std::vector<Node2d>>& ctp_seq, const Environment& env,
+    const Config& config) {
+  std::vector<CostPath> sort_vec;
+  TrajectoryScorer scorer;
+  double cost = 0.0;
+  for (auto& seq : ctp_seq) {
+    cost = scorer.GetScorer(seq, env, config);
+    sort_vec.emplace_back(CostPath(cost, seq));
+  }
+
+  std::sort(sort_vec.begin(), sort_vec.end(), CostPath::CompareCost());
+  return sort_vec;
+}
+Curve BsplineLatticePlanner::ChoseBestTrajectory(
+    const std::vector<CostPath>& cost_path) {
+  if (cost_path.empty()) {
+    return Curve();
+  }
+
+  CostPath best_ctp = cost_path.front();
+  std::vector<Point> best_trajectory;
+  for (size_t i = 0; i + 1 < best_ctp.path_.size(); ++i) {
+    Vec2d cur = best_ctp.path_[i].pos_;
+    Vec2d next = best_ctp.path_[i + 1].pos_;
+    Vec2d temp = next - cur;
+    Point point(cur.x(), cur.y());
+    point.theta_ = temp.Angle();
+    best_trajectory.emplace_back(point);
+  }
+
+  //最后一个点
+  Point last_point(best_ctp.path_.back().pos_.x(),
+                   best_ctp.path_.back().pos_.y());
+  last_point.theta_ = best_trajectory.back().theta_;
+  best_trajectory.emplace_back(last_point);
+  return best_trajectory;
 }
 }  // namespace ahrs

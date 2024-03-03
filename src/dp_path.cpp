@@ -9,7 +9,7 @@ DpPath::DpPath(const std::vector<std::vector<Vec2d>>& sample_points,
   Init(sample_points);
 }
 
-std::vector<Vec2d> DpPath::DpSearch() {
+std::vector<Node2d> DpPath::DpSearch() {
   //第0层赋初始 tips:一开始没有赋初值导致计算有问题
   // tips:这里写法很容易崩
   dp_table_.front().front().cost_ = 0;
@@ -25,7 +25,7 @@ std::vector<Vec2d> DpPath::DpSearch() {
         if (cost < min_cost) {
           Node& current_node = dp_table_[i][j];
           min_cost = cost;
-          current_node.parent_index = parent_point.index_;
+          current_node.parent_index = parent_point.node_.index_;
           current_node.cost_ = min_cost;
         }
       }
@@ -40,15 +40,15 @@ std::vector<Vec2d> DpPath::DpSearch() {
   for (const auto& p : final_layer) {
     if (p.cost_ < min_cost) {
       min_cost = p.cost_;
-      min_cost_index = p.index_;
+      min_cost_index = p.node_.index_;
     }
   }
 
   //从最后一层到第零层提取路径
-  std::vector<Vec2d> path;
+  std::vector<Node2d> path;
   while (min_cost_index.i_ != -1) {
     const auto& current_node = dp_table_[min_cost_index.i_][min_cost_index.j_];
-    path.push_back(current_node.pose_);
+    path.push_back(current_node.node_);
     min_cost_index = current_node.parent_index;
   }
 
