@@ -3,11 +3,7 @@
 #include "config.h"
 #include "environment.h"
 namespace ahrs {
-struct Index {
-  Index(const int& i, const int& j) : i_(i), j_(j) {}
-  int i_;
-  int j_;
-};
+
 struct Node {
   Node(const Vec2d& sample_point, const Index& index,
        const double& cost = std::numeric_limits<double>::max())
@@ -19,6 +15,7 @@ struct Node {
   Vec2d pose_;
   Index index_;
   Index parent_index;
+  std::vector<Index> parent_indexes_;
   //   Node* pre_node_; //tips:这里用node*是不是更高效
   double cost_;
   std::vector<Vec2d> path_;

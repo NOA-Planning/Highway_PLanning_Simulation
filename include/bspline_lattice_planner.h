@@ -19,7 +19,10 @@ class BsplineLatticePlanner {
       const RobotState& state, const ReferenceLine& reference_line,
       Environment& env, std::vector<std::vector<Vec2d>>& control_point_samples);
 
-  std::vector<std::vector<Vec2d>> GenerateCtpSequence(
+  std::vector<std::vector<Vec2d>> GenerateCtpSequenceByDp(
+      const std::vector<std::vector<Vec2d>>& control_point_samples,
+      const RobotState& state, const Environment& env);
+  std::vector<std::vector<Vec2d>> GenerateCtpSequenceByDfs(
       const std::vector<std::vector<Vec2d>>& control_point_samples,
       const RobotState& state, const Environment& env);
 

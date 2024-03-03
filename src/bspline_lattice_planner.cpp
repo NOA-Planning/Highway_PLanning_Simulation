@@ -1,5 +1,6 @@
 #include "bspline_lattice_planner.h"
 #include "dp_path.h"
+#include "grid_graph.h"
 namespace ahrs {
 
 bool BsplineLatticePlanner::Plan(const RobotState& state,
@@ -12,8 +13,11 @@ bool BsplineLatticePlanner::Plan(const RobotState& state,
   SampleControlPoints(state, reference_line, env, control_point_samples);
   // DP遍历
 
+  // std::vector<std::vector<Vec2d>> ctp_sequence =
+  //     GenerateCtpSequenceByDp(control_point_samples, state, env);
+
   std::vector<std::vector<Vec2d>> ctp_sequence =
-      GenerateCtpSequence(control_point_samples, state, env);
+      GenerateCtpSequenceByDfs(control_point_samples, state, env);
 
   trajectory = Curve(debug_info_.reference_line_points_);
 
@@ -56,7 +60,7 @@ void BsplineLatticePlanner::SampleControlPoints(
       reference_points.begin() + start_index,
       reference_points.begin() + end_index + 1);
 }
-std::vector<std::vector<Vec2d>> BsplineLatticePlanner::GenerateCtpSequence(
+std::vector<std::vector<Vec2d>> BsplineLatticePlanner::GenerateCtpSequenceByDp(
     const std::vector<std::vector<Vec2d>>& control_point_samples,
     const RobotState& state, const Environment& env) {
   //规划起点
@@ -81,5 +85,29 @@ std::vector<std::vector<Vec2d>> BsplineLatticePlanner::GenerateCtpSequence(
   debug_info_.ctp_sequence_ = {path};
 
   return {path};
+}
+std::vector<std::vector<Vec2d>> BsplineLatticePlanner::GenerateCtpSequenceByDfs(
+    const std::vector<std::vector<Vec2d>>& control_point_samples,
+    const RobotState& state, const Environment& env) {
+  //规划起点
+  Vec2d start_ctp(state.pose_.x(), state.pose_.y());
+  double theta = state.theta_;
+  double x = start_ctp.x() + config_.zero_layer_interval_ * std::cos(theta) -
+             0 * std::sin(theta);
+  double y = start_ctp.y() + config_.zero_layer_interval_ * std::sin(theta) +
+             0 * cos(theta);
+  Vec2d zero_ctp(x, y);
+
+  // tips: 这里可以用std::move
+  // tips:vector的各种初始化构造讲一下
+  std::vector<std::vector<Vec2d>> ctp_samples = {{zero_ctp}};
+  // tips:insert如何插在Vetor前边，比插后边更耗时
+  ctp_samples.insert(ctp_samples.end(), control_point_samples.begin(),
+                     control_point_samples.end());
+  GridGraph graph(ctp_samples, env, config_);
+  std::vector<std::vector<Vec2d>> all_ctp_sequence = graph.GraphSearch();
+  debug_info_.ctp_sequence_ = all_ctp_sequence;
+
+  return all_ctp_sequence;
 }
 }  // namespace ahrs

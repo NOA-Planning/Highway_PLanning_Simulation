@@ -50,4 +50,10 @@ struct RobotState {
   double kappa_;
 };
 
+struct Index {
+  Index(const int& i, const int& j) : i_(i), j_(j) {}
+  int i_;
+  int j_;
+};
+
 }  // namespace ahrs
