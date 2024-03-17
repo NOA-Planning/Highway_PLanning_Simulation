@@ -75,6 +75,9 @@
         "bit": "cpp",
         "compare": "cpp",
         "concepts": "cpp",
-        "numbers": "cpp"
+        "numbers": "cpp",
+        "core": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp"
     },
 }

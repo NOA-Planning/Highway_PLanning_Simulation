@@ -30,7 +30,12 @@ class BsplineLatticePlanner {
   std::vector<CostPath> SamplesScore(
       const std::vector<std::vector<Node2d>>& ctp_seq, const Environment& env,
       const Config& config);
-  Curve ChoseBestTrajectory(const std::vector<CostPath>& cost_path);
+
+  std::vector<std::vector<Point>> GenBsplineSamples(
+      std::vector<std::vector<Node2d>>& ctp_seq);
+
+  std::vector<Point> ChoseBestCtp(const std::vector<CostPath>& cost_path,
+                                  size_t& best_index);
   DebugInfo debug_info_;
   Config config_;
 };

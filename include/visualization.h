@@ -32,6 +32,9 @@ class Visualization {
                   const Config& config);
   void ShowPoints(const std::vector<Node2d>& points, const std::string& name,
                   const std::string& color, const Config& config);
+
+  void ShowBsplineSamples(const std::vector<std::vector<Point>>& samples,
+                          const Config& config);
   void ShowPoints(const std::vector<Point>& points, const std::string& name,
                   const std::string& color, const Config& config,
                   const bool& show_car = false);

@@ -31,9 +31,9 @@ class Curve {
 
  public:
   Curve(){};
-  Curve(const std::vector<Point>& ctl_points) : control_points_(ctl_points) {
-    points_ = ctl_points;
-  }
+  Curve(const std::vector<Point>& points, const std::vector<Point>& ctl_points)
+      : points_(points), control_points_(ctl_points) {}
+
   ~Curve() {}
   std::vector<Point> Points() const { return points_; }
   std::vector<Point> ControlPoints() const { return control_points_; }

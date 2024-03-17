@@ -55,6 +55,23 @@ void Visualization::ShowPoints(const std::vector<Node2d>& points,
   }
 }
 
+void Visualization::ShowBsplineSamples(
+    const std::vector<std::vector<Point>>& samples, const Config& config) {
+  std::vector<std::string> colors = {"r.", "g.", "b.", "y.", "c."};
+  for (size_t i = 0; i < samples.size(); ++i) {
+    std::vector<double> x_list, y_list;
+    for (size_t j = 0; j < samples[i].size(); ++j) {
+      double cur_x = samples[i][j].pose_.x();
+      double cur_y = samples[i][j].pose_.y();
+      x_list.push_back(cur_x);
+      y_list.push_back(cur_y);
+    }
+    std::string name = "bspline" + std::to_string(i);
+    size_t color_i = i % colors.size();
+    plt::named_plot(name, x_list, y_list, colors[color_i]);
+  }
+}
+
 void Visualization::ShowPoints(const std::vector<Point>& points,
                                const std::string& name,
                                const std::string& color, const Config& config,
@@ -195,6 +212,7 @@ void Visualization::ShowResult(const ReferenceLine& line,
   if (line.GetPoints().empty()) {
     return;
   }
+  plt::figure(1);
   plt::clf();
   plt::subplot(2, 1, 1);
   // 显示参考线
@@ -245,6 +263,13 @@ void Visualization::ShowResult(const ReferenceLine& line,
   ShowDebugInfo(debug_info, config);
   plt::axis("equal");
   plt::title("trajectory");
+
+  plt::figure(2);
+  plt::clf();
+  //显示bspline采样
+  ShowBsplineSamples(debug_info.bspline_samples_, config);
+  plt::axis("equal");
+  plt::title("bspline");
 
   plt::pause(0.01);
   // plt::show();  // 显示图表

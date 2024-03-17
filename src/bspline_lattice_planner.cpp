@@ -25,9 +25,19 @@ bool BsplineLatticePlanner::Plan(const RobotState& state,
 
   std::vector<CostPath> sort_vec = SamplesScore(ctp_sequence, env, config);
 
-  trajectory = ChoseBestTrajectory(sort_vec);
+  size_t best_index;
+  std::vector<Point> best_ctp = ChoseBestCtp(sort_vec, best_index);
 
-  return true;
+  std::vector<std::vector<Point>> bspline_samples =
+      GenBsplineSamples(ctp_sequence);
+
+  if (!bspline_samples.empty()) {
+    Curve best_trajectory(bspline_samples[0], best_ctp);
+    trajectory = best_trajectory;
+    return true;
+  }
+
+  return false;
 }
 void BsplineLatticePlanner::SampleControlPoints(
     const RobotState& state, const ReferenceLine& reference_line,
@@ -83,7 +93,7 @@ std::vector<std::vector<Node2d>> BsplineLatticePlanner::GenerateCtpSequenceByDp(
   // tips:vector的各种初始化构造讲一下
 
   std::vector<std::vector<Vec2d>> ctp_samples = {{zero_ctp}};
-  // tips:insert如何插在Vetor前边，比插后边更耗时
+  // tips:insert如何插在Vector前边，比插后边更耗时
   ctp_samples.insert(ctp_samples.end(), control_point_samples.begin(),
                      control_point_samples.end());
 
@@ -101,26 +111,33 @@ BsplineLatticePlanner::GenerateCtpSequenceByDfs(
   //规划起点
   Vec2d start_ctp(state.pose_.x(), state.pose_.y());
   double theta = state.theta_;
-  double x = start_ctp.x() + config_.zero_layer_interval_ * std::cos(theta) -
+  double x = start_ctp.x() - config_.zero_layer_interval_ * std::cos(theta) -
              0 * std::sin(theta);
-  double y = start_ctp.y() + config_.zero_layer_interval_ * std::sin(theta) +
+  double y = start_ctp.y() - config_.zero_layer_interval_ * std::sin(theta) +
              0 * cos(theta);
-  Vec2d zero_ctp(x, y);
+  Vec2d back_ctp(x, y);
+
+  x = start_ctp.x() + config_.zero_layer_interval_ * std::cos(theta) -
+      0 * std::sin(theta);
+  y = start_ctp.y() + config_.zero_layer_interval_ * std::sin(theta) +
+      0 * cos(theta);
+  Vec2d front_ctp(x, y);
 
   // tips: 这里可以用std::move
   // tips:vector的各种初始化构造讲一下
   // std::vector<std::vector<Vec2d>> ctp_samples = {{start_ctp}, {zero_ctp}};
   std::vector<std::vector<Vec2d>> ctp_samples;
+  ctp_samples.push_back({back_ctp});
   ctp_samples.push_back({start_ctp});
-  ctp_samples.push_back({zero_ctp});
+  ctp_samples.push_back({front_ctp});
 
-  // tips:insert如何插在Vetor前边，比插后边更耗时
+  // tips:insert插在vector前边，比插后边更耗时
   ctp_samples.insert(ctp_samples.end(), control_point_samples.begin(),
                      control_point_samples.end());
   GridGraph graph(ctp_samples, env, config_);
-  // std::vector<std::vector<Node2d>> all_ctp_sequence =
-  //     graph.GraphSearchWithStack();
-  std::vector<std::vector<Node2d>> all_ctp_sequence = graph.GraphSearch();
+  std::vector<std::vector<Node2d>> all_ctp_sequence =
+      graph.GraphSearchWithStack();
+  // std::vector<std::vector<Node2d>> all_ctp_sequence = graph.GraphSearch();
   debug_info_.ctp_sequence_ = all_ctp_sequence;
 
   return all_ctp_sequence;
@@ -139,13 +156,31 @@ std::vector<CostPath> BsplineLatticePlanner::SamplesScore(
   std::sort(sort_vec.begin(), sort_vec.end(), CostPath::CompareCost());
   return sort_vec;
 }
-Curve BsplineLatticePlanner::ChoseBestTrajectory(
-    const std::vector<CostPath>& cost_path) {
+std::vector<std::vector<Point>> BsplineLatticePlanner::GenBsplineSamples(
+    std::vector<std::vector<Node2d>>& ctp_seq) {
+  std::vector<std::vector<Point>> bspline_samples;
+  BsplineCurve bspline(0.01);
+  for (size_t i = 0; i < ctp_seq.size(); ++i) {
+    std::vector<Vec2d> ctp;
+    for (const auto& p : ctp_seq[i]) {
+      ctp.push_back(Vec2d(p.pos_.x(), p.pos_.y()));
+    }
+    bspline.SetControlPoints(ctp);
+    std::vector<Point> trajectory = bspline.GenerateCurve();
+    bspline_samples.push_back(trajectory);
+  }
+  debug_info_.bspline_samples_ = bspline_samples;
+  return bspline_samples;
+}
+
+std::vector<Point> BsplineLatticePlanner::ChoseBestCtp(
+    const std::vector<CostPath>& cost_path, size_t& best_index) {
   if (cost_path.empty()) {
-    return Curve();
+    return {};
   }
 
   CostPath best_ctp = cost_path.front();
+  best_index = 0;
   std::vector<Point> best_trajectory;
   for (size_t i = 0; i + 1 < best_ctp.path_.size(); ++i) {
     Vec2d cur = best_ctp.path_[i].pos_;
