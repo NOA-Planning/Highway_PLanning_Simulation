@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
+using json = nlohmann::json;
 namespace py = pybind11;
 
 struct Frame {
@@ -20,6 +21,7 @@ struct Frame {
   std::string next;
   std::string prev;
   std::vector<std::string> instances;
+  nlohmann::json to_json() const;
 };
 
 struct Agent {
@@ -27,6 +29,7 @@ struct Agent {
   std::string first_instance;
   std::string type;
   std::vector<double> size;
+  nlohmann::json to_json() const;
 };
 
 struct Instance {
@@ -37,6 +40,7 @@ struct Instance {
   std::string next;
   std::string prev;
   std::string agent_token;
+  nlohmann::json to_json() const;
 };
 
 struct Obstacle {
@@ -44,12 +48,14 @@ struct Obstacle {
   std::vector<double> coords;
   std::vector<double> size;
   double heading;
+  nlohmann::json to_json() const;
 };
 
 struct Scene {
   std::string scene_token;
   std::string first_frame;
   std::vector<std::string> obstacles;
+  nlohmann::json to_json() const;
 };
 
 struct ParkingArea {
@@ -75,76 +81,14 @@ class Dataset {
   std::unordered_map<std::string, Scene> scenes;
 
   void load_from_python(const std::string& script, const std::string& function,
-                        const std::string& filename) {
-    py::scoped_interpreter guard{};
-    py::module_ sys = py::module_::import("sys");
-    sys.attr("path").attr("append")(
-        "/home/ahrs/workspace/nday/bspline_lattice_planner/scripts");
-    py::module_ dataset_module = py::module_::import(script.c_str());
-    py::object get_data = dataset_module.attr(function.c_str());
-
-    std::string data = get_data(filename).cast<std::string>();
-    auto json_data = nlohmann::json::parse(data);
-
-    for (const auto& item : json_data["frames"].items()) {
-      Frame frame;
-      frame.token = item.key();
-      frame.timestamp = item.value().at("timestamp").get<double>();
-      frame.next = item.value().at("next").get<std::string>();
-      frame.prev = item.value().at("prev").get<std::string>();
-      frame.instances =
-          item.value().at("instances").get<std::vector<std::string>>();
-      frames[frame.token] = frame;
-    }
-
-    for (const auto& item : json_data["agents"].items()) {
-      Agent agent;
-      agent.token = item.key();
-      agent.first_instance =
-          item.value().at("first_instance").get<std::string>();
-      agent.type = item.value().at("type").get<std::string>();
-      agent.size = item.value().at("size").get<std::vector<double>>();
-      agents[agent.token] = agent;
-    }
-
-    for (const auto& item : json_data["instances"].items()) {
-      Instance instance;
-      instance.token = item.key();
-      instance.coords = item.value().at("coords").get<std::vector<double>>();
-      instance.heading = item.value().at("heading").get<double>();
-      instance.speed = item.value().at("speed").get<double>();
-      instance.next = item.value().at("next").get<std::string>();
-      instance.prev = item.value().at("prev").get<std::string>();
-      instance.agent_token = item.value().at("agent_token").get<std::string>();
-      instances[instance.token] = instance;
-    }
-
-    for (const auto& item : json_data["obstacles"].items()) {
-      Obstacle obstacle;
-      obstacle.token = item.key();
-      obstacle.coords = item.value().at("coords").get<std::vector<double>>();
-      obstacle.size = item.value().at("size").get<std::vector<double>>();
-      obstacle.heading = item.value().at("heading").get<double>();
-      obstacles[obstacle.token] = obstacle;
-    }
-
-    for (const auto& item : json_data["scenes"].items()) {
-      Scene scene;
-      scene.scene_token = item.key();
-      scene.first_frame = item.value().at("first_frame").get<std::string>();
-      scene.obstacles =
-          item.value().at("obstacles").get<std::vector<std::string>>();
-      scenes[scene.scene_token] = scene;
-    }
-  }
-
-  std::vector<std::string> list_scenes() {
-    std::vector<std::string> scene_tokens;
-    for (const auto& scene : scenes) {
-      scene_tokens.push_back(scene.first);
-    }
-    return scene_tokens;
-  }
+                        const std::string& filename);
+  json get(const std::string& obj_type, const std::string& token);
+  std::vector<std::string> list_scenes();
+  nlohmann::json getFutureFrames(const std::string& frame_token, int timesteps);
+  std::vector<nlohmann::json> getTimeline(const std::string& obj_type,
+                                          const std::string& direction,
+                                          const std::string& token,
+                                          int timesteps);
 };
 
 #endif  // DATASET_H
