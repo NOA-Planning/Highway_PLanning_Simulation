@@ -48,6 +48,10 @@ endif()
 # 查找Python3和相关组件，包括NumPy，确保项目可以链接和使用这些库。
 find_package(Python3 3.8 COMPONENTS Interpreter Development NumPy REQUIRED)
 find_package(Eigen3 REQUIRED)
+# 添加nlohmann/json库
+find_package(nlohmann_json REQUIRED)
+find_package(pybind11 REQUIRED)
+
 
 # 定义项目的包含目录路径，这些路径中的头文件可以在项目中直接包含。
 set(INCLUDE_PATH 
@@ -55,6 +59,8 @@ set(INCLUDE_PATH
     ${Python3_INCLUDE_DIRS} 
     ${CMAKE_SOURCE_DIR}/third_party/matplotlib-cpp 
     ${EIGEN3_INCLUDE_DIR}
+    ${PYBIND11_INCLUDE_DIRS}
+
 )
 
 # 自动查找当前项目源目录下的所有cpp文件，以便编译。
@@ -63,14 +69,26 @@ file(GLOB_RECURSE SRC_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 # aux_source_directory(src SRC_FILES)
 # 添加一个可执行目标到项目中，并指定构建这个目标需要的源文件。
 add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/test/main.cpp ${SRC_FILES})
+add_executable(park_data ${CMAKE_SOURCE_DIR}/test/park_data_test.cpp ${SRC_FILES})
 add_executable(test ${CMAKE_SOURCE_DIR}/test/plot_test.cpp ${SRC_FILES})
+
 # 为可执行目标设置私有包含目录，这意味着这些目录只对这个目标可见。
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_PATH})
+target_include_directories(park_data PRIVATE ${INCLUDE_PATH})
 target_include_directories(test PRIVATE ${INCLUDE_PATH})
 
 # 链接Python库和NumPy库到可执行目标，确保目标可以使用这些外部库的功能。
 target_link_libraries(${PROJECT_NAME} PRIVATE Python3::Python Python3::NumPy)
-target_link_libraries(test PRIVATE Python3::Python Python3::NumPy)
+target_link_libraries(park_data
+                      ${Python3_LIBRARIES} 
+                      Python3::Python 
+                      Python3::NumPy 
+                      pybind11::module 
+                      nlohmann_json::nlohmann_json
+)
+target_link_libraries(test PRIVATE 
+                      Python3::Python 
+                      Python3::NumPy)
 
 
 # 添加一个名为planner的静态库目标到项目中，指定构建这个库需要的源文件。

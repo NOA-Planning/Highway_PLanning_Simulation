@@ -78,6 +78,11 @@
         "numbers": "cpp",
         "core": "cpp",
         "semaphore": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "any": "cpp",
+        "codecvt": "cpp",
+        "forward_list": "cpp",
+        "valarray": "cpp",
+        "variant": "cpp"
     },
 }

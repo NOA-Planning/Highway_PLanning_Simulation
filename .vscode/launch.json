@@ -9,7 +9,7 @@
             "name": "g++ - Build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/bspline_lattice_planner",
+            "program": "${workspaceFolder}/bin/park_data",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
