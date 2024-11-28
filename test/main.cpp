@@ -1,9 +1,11 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <filesystem>
 
 #include "bspline_lattice_planner.h"
 #include "matplotlibcpp.h"
+
 
 namespace plt = matplotlibcpp;
 using namespace ahrs;
@@ -18,9 +20,8 @@ void UpdateRobotState(RobotState& state, const Curve& trajectory) {
   state.theta_ = trajectory.Points().at(1).theta_;
 }
 ReferenceLine LoadRoadInfo(const std::string& file) {
-  std::string dir = "/home/ahrs/workspace/nday/bspline_lattice_planner/map/";
-  std::string map_name = "berlin_2018.csv";
-  std::ifstream road_line_file(dir + map_name);
+  
+  std::ifstream road_line_file(file);
 
   std::string line, pose;
   std::getline(road_line_file, line);
@@ -67,11 +68,16 @@ ReferenceLine LoadRoadInfo(const std::string& file) {
 
 int main() {
   // 指定读取的路线
-  std::string dir = "/home/ahrs/workspace/nday/bspline_lattice_planner/map/";
-  std::string map_name = "berlin_2018.csv";
-  std::string file_name = dir + map_name;
+
+  std::filesystem::path exePath = std::filesystem::current_path().parent_path();
+  std::filesystem::path configpath = "map/berlin_2018.csv";
+  //std::string dir = "/home/ahrs/workspace/nday/bspline_lattice_planner/map/";
+  //std::string map_name = "berlin_2018.csv";
+  //std::string file_name = dir + map_name;
+  std::filesystem::path fullpath = exePath / configpath;
   //读取路线作为参考线
-  ReferenceLine reference_line = LoadRoadInfo(file_name);
+  std::string strPath = fullpath.string();
+  ReferenceLine reference_line = LoadRoadInfo(strPath);
   if (reference_line.GetPoints().empty()) {
     return 0;
   }

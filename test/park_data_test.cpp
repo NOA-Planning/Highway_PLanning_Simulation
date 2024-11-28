@@ -11,7 +11,7 @@ int main() {
   Dataset dataset;
   dataset.load_from_python(
       "dataset", "get_dataset_data",
-      "/home/ahrs/workspace/nday/bspline_lattice_planner/data/"
+      "../data/"
       "DJI_0012");
 
   // 示例: 打印一些加载的数据

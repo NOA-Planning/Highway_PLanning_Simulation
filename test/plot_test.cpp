@@ -12,7 +12,7 @@ namespace plt = matplotlibcpp;
 int main() {
   std::vector<double> x_list, y_list, left_boundary_x, left_boundary_y,
       right_boundary_x, right_boundary_y;
-  std::string dir = "/home/ahrs/workspace/nday/bspline_lattice_planner/map/";
+  std::string dir = "../map/";
   std::string map_name = "berlin_2018.csv";
   std::ifstream road_line_file(dir + map_name);
 

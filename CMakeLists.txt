@@ -49,7 +49,7 @@ endif()
 find_package(Python3 3.8 COMPONENTS Interpreter Development NumPy REQUIRED)
 find_package(Eigen3 REQUIRED)
 # 添加nlohmann/json库
-find_package(nlohmann_json REQUIRED)
+#find_package(nlohmann_json REQUIRED)
 find_package(pybind11 REQUIRED)
 
 
@@ -84,7 +84,7 @@ target_link_libraries(park_data
                       Python3::Python 
                       Python3::NumPy 
                       pybind11::module 
-                      nlohmann_json::nlohmann_json
+                      #nlohmann_json::nlohmann_json
 )
 target_link_libraries(test PRIVATE 
                       Python3::Python 
